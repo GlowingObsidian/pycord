@@ -1,0 +1,2 @@
+remember_user=true
+username=akihiro
