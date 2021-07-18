@@ -1,2 +1,1 @@
-remember_user=true
-username=akihiro
+remember_user=false
