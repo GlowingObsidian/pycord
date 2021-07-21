@@ -1,17 +1,21 @@
 from tkinter import *
 from tkinter import messagebox
 
-ver='0.1.3a'
+ver='v0.1.4a'
 username=''
 settings={}
+chat=[]
 
 #get the previous chats locally
 log=open('log.txt','r')
-prev_chat=log.read()
+chat=log.readlines()
 log.close()
 
-#open chat log to write
-log=open('log.txt','a')
+def prev_chat():
+    lines=''
+    for i in chat:
+        lines=lines+i
+    return lines
 
 settings_file=open('settings.txt','r')
 settings_string=settings_file.read()
@@ -30,44 +34,83 @@ settings_file.close()
 
 #main window
 root = Tk()
+root.withdraw()
 root.title('Pycord')
-#root.geometry('480x480')
+root.geometry('480x480')
 root.iconbitmap('./icon.ico')
 root.resizable(False,False)
-remember_me=IntVar()
+root.rowconfigure(0,weight=1)
+root.rowconfigure(1,weight=1)
+root.rowconfigure(2,weight=1)
+root.columnconfigure(0,weight=1)
+root.columnconfigure(1,weight=1)
+root.columnconfigure(2,weight=1)
 
 
 #main window draw
 def send():
     value=input.get()
     if(value!='' and value!=' '):
-        msg='<'+username+'>'+value+'\n'
-        text.config(state=NORMAL)
-        text.insert(END,msg)
-        log.write(msg)
+        msg='['+username+']'+value+'\n'
+        chatbox.config(state=NORMAL)
+        chatbox.insert(END,msg)
+        chat.append(msg)
     input.delete(0,END)
-    text.config(state=DISABLED)
+    chatbox.config(state=DISABLED)
 
-text=Text(root,state=DISABLED,width=50,bg='#EEA47F',fg='#00539C')
-scrollbar=Scrollbar(root,command=text.yview).grid(row=0,column=2,sticky='ns')
+chatbox=Text(root,state=DISABLED,bg=settings['chat_bg'],fg=settings['chat_fg'])
+Scrollbar(root,command=chatbox.yview).grid(row=0,column=1,sticky='nse')
 input=Entry(root,text='Type a message to send',state=DISABLED)
-enter=Button(root,text='send',command=send).grid(row=1,column=1,columnspan=2,sticky='ew')
-version=Label(root,text='ver'+ver).grid(row=2,column=1,columnspan=2,sticky='e')
-text.grid(row=0,columnspan=2,sticky='ew')
-input.grid(row=1,column=0,sticky='nsew')
+Button(root,text='send',command=send).grid(row=1,column=1,sticky='e')
+Label(root,text=ver).grid(row=2,column=1,columnspan=1,sticky='e')
+chatbox.grid(row=0,columnspan=2,sticky='nsew')
+chatbox.yview_pickplace('end')
+input.grid(row=1,column=0,columnspan=2,sticky='nsew')
 
 #add menu bar
+
+def preferences():
+    remember_user=BooleanVar()
+    if(settings['remember_user']=='true'):
+        remember_user.set(True)
+    def apply():
+        if(remember_user.get()==True):
+            settings['remember_user']='true'
+            settings['username']=username
+        else:
+            if(settings['remember_user']=='true'):
+                settings['remember_user']='false'
+                settings.pop('username')
+    pref_win=Toplevel(root)
+    pref_win.rowconfigure(0,weight=1)
+    pref_win.rowconfigure(1,weight=1)
+    pref_win.rowconfigure(2,weight=1)
+    pref_win.columnconfigure(0,weight=1)
+    pref_win.columnconfigure(1,weight=1)
+    pref_win.columnconfigure(2,weight=1)
+    pref_win.columnconfigure(3,weight=1)
+    pref_win.title('Pycord preferences')
+    pref_win.iconbitmap('./icon.ico')
+    pref_win.geometry('350x150')
+    pref_win.resizable(False,False)
+    pref_win_remember_user=Checkbutton(pref_win,text='Remember this account?',variable=remember_user)
+    pref_win_remember_user.var=remember_user
+    pref_win_remember_user.grid(row=0,column=0)
+    Button(pref_win,text='Apply',command=apply).grid(row=2,column=2,sticky='sew')
+    Button(pref_win,text='OK',command=pref_win.destroy).grid(row=2,column=3,sticky='sew')
+
 def signout():
-    settings['remember_user']='false'
-    settings.pop('username')
+    #settings['remember_user']='false'
+    #settings.pop('username')
     root.destroy()
 
 def about():
-    messagebox.showinfo('About','Pycord\n\nCopyright(c) 2021\nCoded by The Glowing Obsidian\nVersion: '+ver)
+    messagebox.showinfo('About','Pycord\n\nCopyright(c) 2021\nVersion: '+ver)
 
 menubar=Menu(root)
 options=Menu(menubar,tearoff=0)
 menubar.add_cascade(label='Options',menu=options)
+options.add_command(label='Preferences',command=preferences)
 options.add_command(label='Sign Out',command=signout)
 options.add_command(label='About',command=about)
 options.add_separator()
@@ -75,23 +118,21 @@ options.add_command(label='Exit',command=root.destroy)
 root.config(menu=menubar)
 
 #sign-in popup window draw
-def get_username():
+def signin():
     global username
     if(settings['remember_user']=='false'):
         username=signin_win_input.get()
         signin_win.destroy()
-    name=Label(root,text='Signed in as: '+username).grid(row=2,column=0,sticky='w')
+    root.deiconify()
+    Label(root,text='Signed in as: '+username).grid(row=2,column=0,sticky='w')
     input.config(state=NORMAL)
-    text.config(state=NORMAL)
-    text.insert(END,prev_chat)
-    text.config(state=DISABLED)
-    if(remember_me.get()==1):
-        settings['remember_user']='true'
-        settings['username']=username
+    chatbox.config(state=NORMAL)
+    chatbox.insert(END,prev_chat())
+    chatbox.config(state=DISABLED)
     
 if(settings['remember_user']=='true'):
     username=settings['username']
-    get_username()
+    signin()
 else:
     signin_win=Toplevel(root)
     signin_win.columnconfigure(0,weight=1)
@@ -102,14 +143,17 @@ else:
     signin_win_intro=Label(signin_win,text='Enter a username to continue').grid(row=0,column=0)
     signin_win_input=Entry(signin_win)
     signin_win_input.grid(row=1,column=0)
-    signin_win_button=Button(signin_win,text='Sign In',command=get_username).grid(row=2,column=0)
-    signin_win_remember_me=Checkbutton(signin_win,text='Remember me',variable=remember_me).grid(row=3,column=0)
+    Button(signin_win,text='Sign In',command=signin).grid(row=2,column=0)
 
 mainloop()
-log.close()
+
 settings_line=''
 for i in settings:
     settings_line=settings_line+i+'='+settings[i]+'\n'
 settings_file=open('settings.txt','w')
 settings_file.write(settings_line)
 settings_file.close()
+
+log=open('log.txt','w')
+log.write(prev_chat())
+log.close()
