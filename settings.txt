@@ -1,1 +1,3 @@
+chat_bg=#36688d
+chat_fg=#f3cd05
 remember_user=false
