@@ -1,3 +1,5 @@
-chat_bg=#36688d
-chat_fg=#f3cd05
-remember_user=false
+chat_bg=#36454F
+chat_fg=#ffffff
+font=consolas
+remember_user=true
+username=akihiro
