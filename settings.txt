@@ -1,3 +1,4 @@
 chat_bg=#36454F
 chat_fg=#ffffff
+font=consolas
 remember_user=false
